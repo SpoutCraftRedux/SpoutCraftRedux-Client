@@ -74,7 +74,7 @@ public abstract class Scrollable extends Widget {
             graphics.fillGradient(right - SCROLLBAR, this.y, right, this.y + this.height, BAR_TOP, BAR_BOTTOM);
             double progress = (double) this.scrollY / this.maxScroll();
             int thumbY = this.y + (int) (3 + progress * (this.height - 16.0 - 6));
-            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, WidgetStyle.SCROLLER, right - SCROLLBAR, thumbY, 12, 15);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, WidgetStyle.SCROLLER, right - SCROLLBAR + 2, thumbY, 12, 15);
             graphics.fillGradient(this.x, this.y - 1, right, this.y + 5, 0xFF000000, 0x00000000);
             graphics.fillGradient(this.x, this.y + this.height - 5, right + 1, this.y + this.height, 0x00000000, 0xFF000000);
         }
