@@ -26,3 +26,17 @@ jobs:
         with:
           name: spoutcraftredux-fabric
           path: build/libs/*.jar
+      - name: Upload to the downloads API
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          TOKEN: ${{ secrets.DOWNLOADS_API_TOKEN }}
+          COMMITS: ${{ toJson(github.event.commits) }}
+        run: |
+          jar=$(ls build/libs/*.jar | grep -v -E -- '-(sources|javadoc|dev)\.jar$' | head -n1)
+          commits=$(echo "$COMMITS" | jq -c '[.[] | {author: .author.name, email: .author.email, description: .message, hash: .id, timestamp: .timestamp}]')
+          curl -fsS -X POST "https://api.spoutcraftredux.org/v2/spoutcraftredux-fabric/26.3" \
+            -H "Authorization: Bearer $TOKEN" \
+            -F "file=@$jar" \
+            -F "build=${{ github.run_number }}" \
+            -F "duration=$(( ($(date +%s) - $(date -d '${{ github.event.head_commit.timestamp }}' +%s)) * 1000 ))" \
+            -F "commits=$commits"
