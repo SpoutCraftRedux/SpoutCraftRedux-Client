@@ -15,9 +15,15 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.equipment.ArmorMaterial;
+import net.minecraft.world.item.equipment.ArmorMaterials;
+import net.minecraft.world.item.equipment.ArmorType;
+import net.minecraft.world.item.equipment.EquipmentAssets;
 import org.slf4j.Logger;
 import org.spoutcraftredux.client.mixin.DataComponentInitializersAccessor;
 import org.spoutcraftredux.client.mixin.MappedRegistryAccessor;
@@ -59,8 +65,11 @@ public final class ClientContent {
         List<?> initializers = ((DataComponentInitializersAccessor) BuiltInRegistries.DATA_COMPONENT_INITIALIZERS).spoutcraftredux$getInitializers();
         vanillaItemCount = BuiltInRegistries.ITEM.size();
         vanillaInitializerCount = initializers.size();
+        // Tools look up block tags through a registration lookup, which needs the block registry open
+        MappedRegistryAccessor<?> blocks = (MappedRegistryAccessor<?>) BuiltInRegistries.BLOCK;
         registry.spoutcraftredux$setFrozen(false);
         registry.spoutcraftredux$setUnregisteredIntrusiveHolders(new IdentityHashMap<>());
+        blocks.spoutcraftredux$setFrozen(false);
         try {
             for (Content.Entry entry : items) {
                 if (entry.rawId() != BuiltInRegistries.ITEM.size()) {
@@ -79,6 +88,7 @@ public final class ClientContent {
             LOGGER.error("Could not register the server's items", e);
             return "Could not register the server's items: " + e.getMessage();
         } finally {
+            blocks.spoutcraftredux$setFrozen(true);
             registry.spoutcraftredux$setUnregisteredIntrusiveHolders(null);
             registry.spoutcraftredux$setFrozen(true);
         }
@@ -86,12 +96,51 @@ public final class ClientContent {
         return "";
     }
 
-    // Must build the same components as the server's SpoutCraftReduxItem
     private static Item create(Minecraft minecraft, Identifier id, Content.Entry entry) {
         ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, id);
+        Item item = new Item(properties(key, entry));
+        Component name = NotificationHandler.parse(minecraft, entry.string(ContentKeys.NAME, "\"" + id.getPath() + "\""));
+        Identifier model = Identifier.tryParse(entry.string(ContentKeys.MODEL, id.toString()));
+        Identifier itemModel = model != null ? model : id;
+        BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.add(key, (components, context, k) ->
+            components.set(DataComponents.ITEM_NAME, name).set(DataComponents.ITEM_MODEL, itemModel));
+        return item;
+    }
+
+    // Must stay the same as the server's SpoutCraftReduxItem#properties
+    private static Item.Properties properties(ResourceKey<Item> key, Content.Entry entry) {
         Item.Properties properties = new Item.Properties().setId(key)
             .stacksTo(entry.integer(ContentKeys.MAX_STACK_SIZE, 64))
             .rarity(Rarity.valueOf(entry.string(ContentKeys.RARITY, "common").toUpperCase(Locale.ROOT)));
+        String tool = entry.string(ContentKeys.TOOL, "");
+        if (!tool.isEmpty()) {
+            ToolMaterial material = toolMaterial(entry.string(ContentKeys.TOOL_MATERIAL, ""));
+            float damage = entry.number(ContentKeys.ATTACK_DAMAGE, 0);
+            float speed = entry.number(ContentKeys.ATTACK_SPEED, 0);
+            switch (tool) {
+                case "sword" -> properties.sword(material, damage, speed);
+                case "pickaxe" -> properties.pickaxe(material, damage, speed);
+                case "axe" -> properties.axe(material, damage, speed);
+                case "shovel" -> properties.shovel(material, damage, speed);
+                case "hoe" -> properties.hoe(material, damage, speed);
+                default -> throw new IllegalArgumentException("Unknown tool " + tool);
+            }
+        }
+        String armor = entry.string(ContentKeys.ARMOR_MATERIAL, "");
+        if (!armor.isEmpty()) {
+            ArmorMaterial material = armorMaterial(armor);
+            String asset = entry.string(ContentKeys.EQUIPMENT_ASSET, "");
+            if (!asset.isEmpty()) {
+                material = new ArmorMaterial(material.durability(), material.defense(), material.enchantmentValue(), material.equipSound(),
+                    material.toughness(), material.knockbackResistance(), material.repairIngredient(),
+                    ResourceKey.create(EquipmentAssets.ROOT_ID, Identifier.parse(asset)));
+            }
+            properties.humanoidArmor(material, ArmorType.valueOf(entry.string(ContentKeys.ARMOR_PIECE, "").toUpperCase(Locale.ROOT)));
+        }
+        String slot = entry.string(ContentKeys.EQUIP_SLOT, "");
+        if (!slot.isEmpty()) {
+            properties.equippable(EquipmentSlot.byName(slot));
+        }
         int maxDamage = entry.integer(ContentKeys.MAX_DAMAGE, 0);
         if (maxDamage > 0) {
             properties.durability(maxDamage);
@@ -99,19 +148,39 @@ public final class ClientContent {
         if (entry.bool(ContentKeys.FIRE_RESISTANT, false)) {
             properties.fireResistant();
         }
-        if (entry.properties().containsKey(ContentKeys.NUTRITION)) {
-            FoodProperties.Builder food = new FoodProperties.Builder()
-                .nutrition(entry.integer(ContentKeys.NUTRITION, 0))
+        if (entry.properties().get(ContentKeys.NUTRITION) instanceof Integer nutrition) {
+            FoodProperties.Builder food = new FoodProperties.Builder().nutrition(nutrition)
                 .saturationModifier(entry.number(ContentKeys.SATURATION, 0));
             properties.food((entry.bool(ContentKeys.CAN_ALWAYS_EAT, false) ? food.alwaysEdible() : food).build());
         }
-        Item item = new Item(properties);
-        Component name = NotificationHandler.parse(minecraft, entry.string(ContentKeys.NAME, "\"" + id.getPath() + "\""));
-        Identifier model = Identifier.tryParse(entry.string(ContentKeys.MODEL, id.toString()));
-        Identifier itemModel = model != null ? model : id;
-        BuiltInRegistries.DATA_COMPONENT_INITIALIZERS.add(key, (components, context, k) ->
-            components.set(DataComponents.ITEM_NAME, name).set(DataComponents.ITEM_MODEL, itemModel));
-        return item;
+        return properties;
+    }
+
+    private static ToolMaterial toolMaterial(String name) {
+        return switch (name) {
+            case "wood" -> ToolMaterial.WOOD;
+            case "stone" -> ToolMaterial.STONE;
+            case "copper" -> ToolMaterial.COPPER;
+            case "iron" -> ToolMaterial.IRON;
+            case "diamond" -> ToolMaterial.DIAMOND;
+            case "gold" -> ToolMaterial.GOLD;
+            case "netherite" -> ToolMaterial.NETHERITE;
+            default -> throw new IllegalArgumentException("Unknown tool material " + name);
+        };
+    }
+
+    private static ArmorMaterial armorMaterial(String name) {
+        return switch (name) {
+            case "leather" -> ArmorMaterials.LEATHER;
+            case "copper" -> ArmorMaterials.COPPER;
+            case "chainmail" -> ArmorMaterials.CHAINMAIL;
+            case "iron" -> ArmorMaterials.IRON;
+            case "gold" -> ArmorMaterials.GOLD;
+            case "diamond" -> ArmorMaterials.DIAMOND;
+            case "turtle_scute" -> ArmorMaterials.TURTLE_SCUTE;
+            case "netherite" -> ArmorMaterials.NETHERITE;
+            default -> throw new IllegalArgumentException("Unknown armor material " + name);
+        };
     }
 
     /** Removes every item registered for the session. */
