@@ -16,6 +16,7 @@ import org.spoutcraftredux.client.controls.Shortcuts;
 import org.spoutcraftredux.client.gui.dev.DevCommands;
 import org.spoutcraftredux.client.gui.server.AssetCache;
 import org.spoutcraftredux.client.gui.server.ServerGui;
+import org.spoutcraftredux.client.gui.server.VanillaHudControl;
 import org.spoutcraftredux.client.network.NotificationHandler;
 import org.spoutcraftredux.client.network.RawPayload;
 import org.spoutcraftredux.client.network.SpoutCraftReduxChannels;
@@ -27,6 +28,7 @@ import org.spoutcraftredux.protocol.message.AssetData;
 import org.spoutcraftredux.protocol.message.HelloAck;
 import org.spoutcraftredux.protocol.message.ScreenClose;
 import org.spoutcraftredux.protocol.message.ScreenOpen;
+import org.spoutcraftredux.protocol.message.VanillaHud;
 import org.spoutcraftredux.protocol.message.WidgetRemove;
 import org.spoutcraftredux.protocol.message.WidgetUpdate;
 import org.slf4j.Logger;
@@ -78,11 +80,13 @@ public final class SpoutCraftReduxClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(ServerKeyBindings::tick);
 
         ServerGui.register();
+        VanillaHudControl.register();
         receive(SpoutCraftReduxChannels.SCREEN_OPEN, (minecraft, data) -> ServerGui.open(minecraft, ScreenOpen.decode(data)));
         receive(SpoutCraftReduxChannels.SCREEN_CLOSE, (minecraft, data) -> ServerGui.close(ScreenClose.decode(data)));
         receive(SpoutCraftReduxChannels.WIDGET_UPDATE, (minecraft, data) -> ServerGui.update(WidgetUpdate.decode(data)));
         receive(SpoutCraftReduxChannels.ASSET_DATA, (minecraft, data) -> AssetCache.receive(AssetData.decode(data)));
         receive(SpoutCraftReduxChannels.WIDGET_REMOVE, (minecraft, data) -> ServerGui.remove(WidgetRemove.decode(data)));
+        receive(SpoutCraftReduxChannels.VANILLA_HUD, (minecraft, data) -> VanillaHudControl.receive(VanillaHud.decode(data)));
 
         ClientPlayNetworking.registerGlobalReceiver(SpoutCraftReduxChannels.NOTIFICATION,
             (payload, context) -> NotificationHandler.handle(context.client(), payload.data()));
@@ -93,6 +97,7 @@ public final class SpoutCraftReduxClient implements ClientModInitializer {
             SpoutCraftReduxSession.end();
             ServerKeyBindings.clear();
             ServerGui.clear();
+            VanillaHudControl.clear();
             AssetCache.clearRequests();
         });
     }

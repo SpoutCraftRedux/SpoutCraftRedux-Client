@@ -10,6 +10,7 @@ import org.spoutcraftredux.protocol.message.ControlEvent;
 import org.spoutcraftredux.protocol.message.HelloAck;
 import org.spoutcraftredux.protocol.message.ScreenClose;
 import org.spoutcraftredux.protocol.message.ScreenOpen;
+import org.spoutcraftredux.protocol.message.VanillaHud;
 import org.spoutcraftredux.protocol.message.WidgetRemove;
 import org.spoutcraftredux.protocol.message.WidgetUpdate;
 import org.spoutcraftredux.protocol.message.KeyBindingPressed;
@@ -27,6 +28,7 @@ public final class SpoutCraftReduxChannels {
     public static final Type<RawPayload> SCREEN_CLOSED = RawPayload.type(ScreenClose.SERVERBOUND);
     public static final Type<RawPayload> WIDGET_UPDATE = RawPayload.type(WidgetUpdate.CHANNEL);
     public static final Type<RawPayload> WIDGET_REMOVE = RawPayload.type(WidgetRemove.CHANNEL);
+    public static final Type<RawPayload> VANILLA_HUD = RawPayload.type(VanillaHud.CHANNEL);
     public static final Type<RawPayload> CONTROL_EVENT = RawPayload.type(ControlEvent.CHANNEL);
     public static final Type<RawPayload> ASSET_REQUEST = RawPayload.type(AssetRequest.CHANNEL);
     public static final Type<RawPayload> ASSET_DATA = RawPayload.type(AssetData.CHANNEL);
@@ -40,7 +42,7 @@ public final class SpoutCraftReduxChannels {
         PayloadTypeRegistry.clientboundPlay().register(NOTIFICATION, RawPayload.codec(NOTIFICATION, Limits.MAX_CLIENTBOUND_BYTES));
         PayloadTypeRegistry.clientboundPlay().register(KEY_BINDINGS, RawPayload.codec(KEY_BINDINGS, Limits.MAX_CLIENTBOUND_BYTES));
         PayloadTypeRegistry.serverboundPlay().register(KEY_BINDING_PRESSED, RawPayload.codec(KEY_BINDING_PRESSED, Limits.MAX_SERVERBOUND_BYTES));
-        for (Type<RawPayload> type : java.util.List.of(SCREEN_OPEN, SCREEN_CLOSE, WIDGET_UPDATE, WIDGET_REMOVE)) {
+        for (Type<RawPayload> type : java.util.List.of(SCREEN_OPEN, SCREEN_CLOSE, WIDGET_UPDATE, WIDGET_REMOVE, VANILLA_HUD)) {
             PayloadTypeRegistry.clientboundPlay().register(type, RawPayload.codec(type, Limits.MAX_CLIENTBOUND_BYTES));
         }
         PayloadTypeRegistry.serverboundPlay().register(SCREEN_CLOSED, RawPayload.codec(SCREEN_CLOSED, Limits.MAX_SERVERBOUND_BYTES));
