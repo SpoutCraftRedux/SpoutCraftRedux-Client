@@ -1,5 +1,8 @@
 package org.spoutcraftredux.client.gui.widget;
 
+import com.mojang.blaze3d.platform.cursor.CursorType;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import org.jspecify.annotations.Nullable;
 import java.util.function.Consumer;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
@@ -180,5 +183,13 @@ public class TextField extends Widget {
         this.text = this.text.substring(0, this.cursor) + piece + this.text.substring(this.cursor);
         this.cursor += piece.length();
         this.onChange.accept(this.text);
+    }
+
+    @Override
+    public @Nullable CursorType getCursor(double mouseX, double mouseY) {
+        if (!this.visible || !this.contains(mouseX, mouseY)) {
+            return null;
+        }
+        return this.enabled ? CursorTypes.IBEAM : CursorTypes.NOT_ALLOWED;
     }
 }

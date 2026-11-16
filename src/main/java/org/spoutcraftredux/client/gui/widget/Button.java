@@ -1,5 +1,7 @@
 package org.spoutcraftredux.client.gui.widget;
 
+import com.mojang.blaze3d.platform.cursor.CursorType;
+import org.jspecify.annotations.Nullable;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -86,5 +88,10 @@ public class Button extends Widget {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public @Nullable CursorType getCursor(double mouseX, double mouseY) {
+        return this.clickCursor(mouseX, mouseY);
     }
 }

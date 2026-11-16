@@ -45,6 +45,7 @@ public class WidgetDemoScreen extends WidgetScreen {
         this.field = this.add(new TextField().setText("Some text"));
         this.empty = this.add(new TextField().setPlaceholder(Component.literal("Search...")));
         this.slider = this.add(new Slider(Component.literal("Slider: 40%")).setPosition(0.4F));
+        this.slider.onChange(value -> this.slider.setText(Component.literal("Slider: " + Math.round(value * 100) + "%")));
         this.gradient = this.add(new Gradient(0xFF3050A0, 0xFF101030));
         this.item = this.add(new ItemWidget(new ItemStack(Items.DIAMOND_SWORD)));
         List<ListView.Item> rows = new ArrayList<>();

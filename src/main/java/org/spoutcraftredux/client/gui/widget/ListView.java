@@ -105,6 +105,9 @@ public class ListView extends Scrollable {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleClick) {
+        if (this.clickScrollBar(mouseX, mouseY, button)) {
+            return true;
+        }
         if (!this.visible || button != InputConstants.MOUSE_BUTTON_LEFT || !this.inViewport(mouseX, mouseY)) {
             return false;
         }

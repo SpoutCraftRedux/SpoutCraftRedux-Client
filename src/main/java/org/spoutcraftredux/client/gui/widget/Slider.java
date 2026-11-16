@@ -1,5 +1,8 @@
 package org.spoutcraftredux.client.gui.widget;
 
+import com.mojang.blaze3d.platform.cursor.CursorType;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import org.jspecify.annotations.Nullable;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.function.Consumer;
 import net.minecraft.client.gui.Font;
@@ -62,8 +65,10 @@ public class Slider extends Widget {
         graphics.pose().scale((float) this.width / drawWidth, this.height / 20.0F);
         int track = drawWidth - 8;
         int handle = (int) (this.position * track);
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, WidgetStyle.BUTTON, 200, 20, 0, 0, handle, 0, 4, 20);
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, WidgetStyle.BUTTON, 200, 20, 196, 0, handle + 4, 0, 4, 20);
+        boolean hovered = this.enabled && (this.dragging || this.contains(mouseX, mouseY));
+        var handleSprite = hovered ? WidgetStyle.BUTTON_HOVER : WidgetStyle.BUTTON;
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, handleSprite, 200, 20, 0, 0, handle, 0, 4, 20);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, handleSprite, 200, 20, 196, 0, handle + 4, 0, 4, 20);
 
         int left = switch (this.align) {
             case LEFT -> 5;
@@ -104,5 +109,10 @@ public class Slider extends Widget {
     private void drag(double mouseX) {
         this.setPosition((float) (mouseX - (this.x + 4)) / (this.width - 8));
         this.onChange.accept(this.position);
+    }
+
+    @Override
+    public @Nullable CursorType getCursor(double mouseX, double mouseY) {
+        return this.dragging ? CursorTypes.POINTING_HAND : this.clickCursor(mouseX, mouseY);
     }
 }

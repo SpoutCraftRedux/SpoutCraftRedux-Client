@@ -1,5 +1,9 @@
 package org.spoutcraftredux.client.gui.widget;
 
+import com.mojang.blaze3d.platform.cursor.CursorType;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
+import org.jspecify.annotations.Nullable;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -17,6 +21,7 @@ public abstract class Scrollable extends Widget {
     private static final int SCROLL_STEP = 20;
 
     protected int scrollY;
+    private boolean draggingBar;
 
     protected abstract int contentHeight();
 
@@ -73,6 +78,54 @@ public abstract class Scrollable extends Widget {
             graphics.fillGradient(this.x, this.y - 1, right, this.y + 5, 0xFF000000, 0x00000000);
             graphics.fillGradient(this.x, this.y + this.height - 5, right + 1, this.y + this.height, 0x00000000, 0xFF000000);
         }
+    }
+
+    /** Starts dragging when the scrollbar is clicked. Subclasses call this before handling their own clicks. */
+    protected boolean clickScrollBar(double mouseX, double mouseY, int button) {
+        int right = this.x + this.width;
+        if (this.visible && button == InputConstants.MOUSE_BUTTON_LEFT && this.needsScrollBar()
+            && mouseX >= right - SCROLLBAR && mouseX < right && mouseY >= this.y && mouseY < this.y + this.height) {
+            this.draggingBar = true;
+            this.dragScrollBar(mouseY);
+            return true;
+        }
+        return false;
+    }
+
+    private void dragScrollBar(double mouseY) {
+        // Puts the middle of the thumb under the cursor
+        double track = this.height - 16.0 - 6;
+        double progress = (mouseY - this.y - 3 - 7.5) / track;
+        this.setScroll((int) Math.round(progress * this.maxScroll()));
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleClick) {
+        return this.clickScrollBar(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button) {
+        if (this.draggingBar) {
+            this.dragScrollBar(mouseY);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        boolean was = this.draggingBar;
+        this.draggingBar = false;
+        return was;
+    }
+
+    @Override
+    public @Nullable CursorType getCursor(double mouseX, double mouseY) {
+        int right = this.x + this.width;
+        boolean overBar = this.needsScrollBar() && mouseX >= right - SCROLLBAR && mouseX < right
+            && mouseY >= this.y && mouseY < this.y + this.height;
+        return this.draggingBar || overBar ? CursorTypes.RESIZE_NS : null;
     }
 
     @Override

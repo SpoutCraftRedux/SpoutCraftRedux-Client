@@ -1,5 +1,7 @@
 package org.spoutcraftredux.client.gui.widget;
 
+import com.mojang.blaze3d.platform.cursor.CursorType;
+import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.CharacterEvent;
@@ -100,6 +102,19 @@ public abstract class Widget {
 
     public void setFocused(boolean focused) {
         this.focused = focused;
+    }
+
+    /** The mouse cursor to show over this widget, or null for the default arrow. */
+    public @Nullable CursorType getCursor(double mouseX, double mouseY) {
+        return null;
+    }
+
+    /** The usual cursor for something clickable: a pointing hand, or "not allowed" when disabled. */
+    protected @Nullable CursorType clickCursor(double mouseX, double mouseY) {
+        if (!this.visible || !this.contains(mouseX, mouseY)) {
+            return null;
+        }
+        return this.enabled ? CursorTypes.POINTING_HAND : CursorTypes.NOT_ALLOWED;
     }
 
     public boolean contains(double mouseX, double mouseY) {

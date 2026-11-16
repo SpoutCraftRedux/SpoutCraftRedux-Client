@@ -1,5 +1,6 @@
 package org.spoutcraftredux.client.gui.widget;
 
+import com.mojang.blaze3d.platform.cursor.CursorType;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -67,6 +68,13 @@ public abstract class WidgetScreen extends Screen {
         super.extractRenderState(graphics, mouseX, mouseY, partialTick);
         for (Widget widget : this.widgets) {
             widget.render(graphics, this.font, mouseX, mouseY, partialTick);
+        }
+        for (Widget widget : this.widgets.reversed()) {
+            CursorType cursor = widget.isVisible() ? widget.getCursor(mouseX, mouseY) : null;
+            if (cursor != null) {
+                graphics.requestCursor(cursor);
+                break;
+            }
         }
         for (Widget widget : this.widgets.reversed()) {
             if (widget.isVisible() && widget.getTooltip() != null && widget.contains(mouseX, mouseY)) {

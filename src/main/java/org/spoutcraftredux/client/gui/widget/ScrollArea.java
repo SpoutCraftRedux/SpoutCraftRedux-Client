@@ -1,5 +1,7 @@
 package org.spoutcraftredux.client.gui.widget;
 
+import com.mojang.blaze3d.platform.cursor.CursorType;
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.Font;
@@ -40,6 +42,9 @@ public class ScrollArea extends Scrollable {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleClick) {
+        if (this.clickScrollBar(mouseX, mouseY, button)) {
+            return true;
+        }
         if (!this.visible || !this.inViewport(mouseX, mouseY)) {
             return false;
         }
@@ -55,7 +60,7 @@ public class ScrollArea extends Scrollable {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        boolean handled = false;
+        boolean handled = super.mouseReleased(mouseX, mouseY, button);
         for (Widget child : this.children) {
             handled |= child.mouseReleased(mouseX - this.x, mouseY - this.y + this.scrollY, button);
         }
@@ -64,6 +69,9 @@ public class ScrollArea extends Scrollable {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button) {
+        if (super.mouseDragged(mouseX, mouseY, button)) {
+            return true;
+        }
         for (Widget child : this.children) {
             if (child.mouseDragged(mouseX - this.x, mouseY - this.y + this.scrollY, button)) {
                 return true;
@@ -90,5 +98,20 @@ public class ScrollArea extends Scrollable {
             }
         }
         return false;
+    }
+
+    @Override
+    public @Nullable CursorType getCursor(double mouseX, double mouseY) {
+        CursorType bar = super.getCursor(mouseX, mouseY);
+        if (bar != null || !this.visible || !this.inViewport(mouseX, mouseY)) {
+            return bar;
+        }
+        for (Widget child : this.children.reversed()) {
+            CursorType cursor = child.getCursor(mouseX - this.x, mouseY - this.y + this.scrollY);
+            if (cursor != null) {
+                return cursor;
+            }
+        }
+        return null;
     }
 }
