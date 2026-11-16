@@ -6,6 +6,8 @@ import org.spoutcraftredux.protocol.Limits;
 import org.spoutcraftredux.protocol.message.Hello;
 import org.spoutcraftredux.protocol.message.AssetData;
 import org.spoutcraftredux.protocol.message.AssetRequest;
+import org.spoutcraftredux.protocol.message.Content;
+import org.spoutcraftredux.protocol.message.ContentAck;
 import org.spoutcraftredux.protocol.message.ControlEvent;
 import org.spoutcraftredux.protocol.message.HelloAck;
 import org.spoutcraftredux.protocol.message.ScreenClose;
@@ -32,6 +34,8 @@ public final class SpoutCraftReduxChannels {
     public static final Type<RawPayload> CONTROL_EVENT = RawPayload.type(ControlEvent.CHANNEL);
     public static final Type<RawPayload> ASSET_REQUEST = RawPayload.type(AssetRequest.CHANNEL);
     public static final Type<RawPayload> ASSET_DATA = RawPayload.type(AssetData.CHANNEL);
+    public static final Type<RawPayload> CONTENT = RawPayload.type(Content.CHANNEL);
+    public static final Type<RawPayload> CONTENT_ACK = RawPayload.type(ContentAck.CHANNEL);
 
     private SpoutCraftReduxChannels() {
     }
@@ -39,6 +43,8 @@ public final class SpoutCraftReduxChannels {
     public static void register() {
         PayloadTypeRegistry.clientboundConfiguration().register(HELLO, RawPayload.codec(HELLO, Limits.MAX_CLIENTBOUND_BYTES));
         PayloadTypeRegistry.serverboundConfiguration().register(HELLO_ACK, RawPayload.codec(HELLO_ACK, Limits.MAX_SERVERBOUND_BYTES));
+        PayloadTypeRegistry.clientboundConfiguration().register(CONTENT, RawPayload.codec(CONTENT, Limits.MAX_CLIENTBOUND_BYTES));
+        PayloadTypeRegistry.serverboundConfiguration().register(CONTENT_ACK, RawPayload.codec(CONTENT_ACK, Limits.MAX_SERVERBOUND_BYTES));
         PayloadTypeRegistry.clientboundPlay().register(NOTIFICATION, RawPayload.codec(NOTIFICATION, Limits.MAX_CLIENTBOUND_BYTES));
         PayloadTypeRegistry.clientboundPlay().register(KEY_BINDINGS, RawPayload.codec(KEY_BINDINGS, Limits.MAX_CLIENTBOUND_BYTES));
         PayloadTypeRegistry.serverboundPlay().register(KEY_BINDING_PRESSED, RawPayload.codec(KEY_BINDING_PRESSED, Limits.MAX_SERVERBOUND_BYTES));

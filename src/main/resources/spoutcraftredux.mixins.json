@@ -3,9 +3,12 @@
   "package": "org.spoutcraftredux.client.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "DataComponentInitializersAccessor",
     "GuiMixin",
     "KeyboardHandlerMixin",
     "KeyMappingMixin",
+    "MappedRegistryAccessor",
+    "MinecraftMixin",
     "MouseHandlerMixin",
     "OptionsSubScreenAccessor"
   ],

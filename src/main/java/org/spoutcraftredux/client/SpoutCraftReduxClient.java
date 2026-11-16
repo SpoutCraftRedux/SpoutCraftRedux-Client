@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import org.spoutcraftredux.client.content.ClientContent;
 import org.spoutcraftredux.client.controls.BindingSettings;
 import org.spoutcraftredux.client.controls.ServerKeyBindings;
 import org.spoutcraftredux.client.controls.Shortcuts;
@@ -23,6 +24,8 @@ import org.spoutcraftredux.client.network.SpoutCraftReduxChannels;
 import org.spoutcraftredux.protocol.Capabilities;
 import org.spoutcraftredux.protocol.ProtocolException;
 import org.spoutcraftredux.protocol.SpoutCraftReduxProtocol;
+import org.spoutcraftredux.protocol.message.Content;
+import org.spoutcraftredux.protocol.message.ContentAck;
 import org.spoutcraftredux.protocol.message.Hello;
 import org.spoutcraftredux.protocol.message.AssetData;
 import org.spoutcraftredux.protocol.message.HelloAck;
@@ -36,7 +39,7 @@ import org.slf4j.Logger;
 public final class SpoutCraftReduxClient implements ClientModInitializer {
     private static final Logger LOGGER = LogUtils.getLogger();
     /** Features this build implements; grows as phases land. */
-    private static final Set<String> CLIENT_CAPABILITIES = Set.of(Capabilities.NOTIFICATION, Capabilities.KEYBIND, Capabilities.UI, Capabilities.HUD, Capabilities.ASSET);
+    private static final Set<String> CLIENT_CAPABILITIES = Set.of(Capabilities.NOTIFICATION, Capabilities.KEYBIND, Capabilities.UI, Capabilities.HUD, Capabilities.ASSET, Capabilities.CONTENT);
 
     @Override
     public void onInitializeClient() {
@@ -69,6 +72,17 @@ public final class SpoutCraftReduxClient implements ClientModInitializer {
             LOGGER.info("Connected to a SpoutCraft Redux server (protocol {}, capabilities {})", version.getAsInt(), hello.capabilities());
         });
 
+        // Registries are only touched on the client thread
+        ClientConfigurationNetworking.registerGlobalReceiver(SpoutCraftReduxChannels.CONTENT, (payload, context) -> context.client().execute(() -> {
+            String error;
+            try {
+                error = ClientContent.receive(context.client(), Content.decode(payload.data()));
+            } catch (ProtocolException e) {
+                error = "Malformed content: " + e.getMessage();
+            }
+            context.responseSender().sendPacket(new RawPayload(SpoutCraftReduxChannels.CONTENT_ACK, new ContentAck(error).encode()));
+        }));
+
         ClientPlayNetworking.registerGlobalReceiver(SpoutCraftReduxChannels.KEY_BINDINGS, (payload, context) -> {
             try {
                 ServerKeyBindings.receive(org.spoutcraftredux.protocol.message.KeyBindings.decode(payload.data()),
@@ -92,14 +106,21 @@ public final class SpoutCraftReduxClient implements ClientModInitializer {
             (payload, context) -> NotificationHandler.handle(context.client(), payload.data()));
 
         ClientConfigurationConnectionEvents.INIT.register((handler, client) -> SpoutCraftReduxSession.end());
-        ClientConfigurationConnectionEvents.DISCONNECT.register((handler, client) -> SpoutCraftReduxSession.end());
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            SpoutCraftReduxSession.end();
-            ServerKeyBindings.clear();
-            ServerGui.clear();
-            VanillaHudControl.clear();
-            AssetCache.clearRequests();
-        });
+        // Fabric's disconnect events run on the network thread and can be missed when the client leaves, so
+        // MinecraftMixin also ends the session; registries and GUI state are only touched on the client thread
+
+        ClientConfigurationConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(SpoutCraftReduxClient::endSession));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(SpoutCraftReduxClient::endSession));
+    }
+
+    /** Clears everything the server set up. Safe to call more than once; called on the client thread. */
+    public static void endSession() {
+        SpoutCraftReduxSession.end();
+        ClientContent.clear();
+        ServerKeyBindings.clear();
+        ServerGui.clear();
+        VanillaHudControl.clear();
+        AssetCache.clearRequests();
     }
 
     /** Registers a play-phase receiver that drops malformed messages instead of disconnecting. */
