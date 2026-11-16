@@ -18,6 +18,7 @@ import org.spoutcraftredux.client.gui.widget.Label;
 import org.spoutcraftredux.client.gui.widget.ListView;
 import org.spoutcraftredux.client.gui.widget.Slider;
 import org.spoutcraftredux.client.gui.widget.TextField;
+import org.spoutcraftredux.client.gui.widget.TextureWidget;
 import org.spoutcraftredux.client.gui.widget.Widget;
 import org.spoutcraftredux.client.network.NotificationHandler;
 import org.spoutcraftredux.protocol.gui.Anchors;
@@ -74,6 +75,7 @@ public final class ServerWidgets {
             case WidgetTypes.GRADIENT -> new Gradient(spec.integer("top", 0xFF000000), spec.integer("bottom", spec.integer("top", 0xFF000000)));
             case WidgetTypes.ITEM -> new ItemWidget(item(spec.string("item", "")));
             case WidgetTypes.LIST -> list(spec, screenId, send);
+            case WidgetTypes.TEXTURE -> new TextureWidget(spec.string("asset", ""));
             default -> null;
         };
         if (widget != null) {
@@ -137,6 +139,10 @@ public final class ServerWidgets {
             }
             case Gradient gradient when spec.type().equals(WidgetTypes.GRADIENT) -> {
                 gradient.setColors(spec.integer("top", 0xFF000000), spec.integer("bottom", spec.integer("top", 0xFF000000)));
+                yield true;
+            }
+            case TextureWidget texture when spec.type().equals(WidgetTypes.TEXTURE) -> {
+                texture.setAsset(spec.string("asset", ""));
                 yield true;
             }
             case ItemWidget item when spec.type().equals(WidgetTypes.ITEM) -> {

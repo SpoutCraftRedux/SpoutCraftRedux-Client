@@ -14,6 +14,7 @@ import org.spoutcraftredux.client.controls.BindingSettings;
 import org.spoutcraftredux.client.controls.ServerKeyBindings;
 import org.spoutcraftredux.client.controls.Shortcuts;
 import org.spoutcraftredux.client.gui.dev.DevCommands;
+import org.spoutcraftredux.client.gui.server.AssetCache;
 import org.spoutcraftredux.client.gui.server.ServerGui;
 import org.spoutcraftredux.client.network.NotificationHandler;
 import org.spoutcraftredux.client.network.RawPayload;
@@ -22,6 +23,7 @@ import org.spoutcraftredux.protocol.Capabilities;
 import org.spoutcraftredux.protocol.ProtocolException;
 import org.spoutcraftredux.protocol.SpoutCraftReduxProtocol;
 import org.spoutcraftredux.protocol.message.Hello;
+import org.spoutcraftredux.protocol.message.AssetData;
 import org.spoutcraftredux.protocol.message.HelloAck;
 import org.spoutcraftredux.protocol.message.ScreenClose;
 import org.spoutcraftredux.protocol.message.ScreenOpen;
@@ -32,7 +34,7 @@ import org.slf4j.Logger;
 public final class SpoutCraftReduxClient implements ClientModInitializer {
     private static final Logger LOGGER = LogUtils.getLogger();
     /** Features this build implements; grows as phases land. */
-    private static final Set<String> CLIENT_CAPABILITIES = Set.of(Capabilities.NOTIFICATION, Capabilities.KEYBIND, Capabilities.UI, Capabilities.HUD);
+    private static final Set<String> CLIENT_CAPABILITIES = Set.of(Capabilities.NOTIFICATION, Capabilities.KEYBIND, Capabilities.UI, Capabilities.HUD, Capabilities.ASSET);
 
     @Override
     public void onInitializeClient() {
@@ -79,6 +81,7 @@ public final class SpoutCraftReduxClient implements ClientModInitializer {
         receive(SpoutCraftReduxChannels.SCREEN_OPEN, (minecraft, data) -> ServerGui.open(minecraft, ScreenOpen.decode(data)));
         receive(SpoutCraftReduxChannels.SCREEN_CLOSE, (minecraft, data) -> ServerGui.close(ScreenClose.decode(data)));
         receive(SpoutCraftReduxChannels.WIDGET_UPDATE, (minecraft, data) -> ServerGui.update(WidgetUpdate.decode(data)));
+        receive(SpoutCraftReduxChannels.ASSET_DATA, (minecraft, data) -> AssetCache.receive(AssetData.decode(data)));
         receive(SpoutCraftReduxChannels.WIDGET_REMOVE, (minecraft, data) -> ServerGui.remove(WidgetRemove.decode(data)));
 
         ClientPlayNetworking.registerGlobalReceiver(SpoutCraftReduxChannels.NOTIFICATION,
@@ -90,6 +93,7 @@ public final class SpoutCraftReduxClient implements ClientModInitializer {
             SpoutCraftReduxSession.end();
             ServerKeyBindings.clear();
             ServerGui.clear();
+            AssetCache.clearRequests();
         });
     }
 

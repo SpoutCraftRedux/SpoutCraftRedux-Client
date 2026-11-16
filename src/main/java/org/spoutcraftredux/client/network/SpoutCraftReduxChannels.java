@@ -4,6 +4,8 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
 import org.spoutcraftredux.protocol.Limits;
 import org.spoutcraftredux.protocol.message.Hello;
+import org.spoutcraftredux.protocol.message.AssetData;
+import org.spoutcraftredux.protocol.message.AssetRequest;
 import org.spoutcraftredux.protocol.message.ControlEvent;
 import org.spoutcraftredux.protocol.message.HelloAck;
 import org.spoutcraftredux.protocol.message.ScreenClose;
@@ -26,6 +28,8 @@ public final class SpoutCraftReduxChannels {
     public static final Type<RawPayload> WIDGET_UPDATE = RawPayload.type(WidgetUpdate.CHANNEL);
     public static final Type<RawPayload> WIDGET_REMOVE = RawPayload.type(WidgetRemove.CHANNEL);
     public static final Type<RawPayload> CONTROL_EVENT = RawPayload.type(ControlEvent.CHANNEL);
+    public static final Type<RawPayload> ASSET_REQUEST = RawPayload.type(AssetRequest.CHANNEL);
+    public static final Type<RawPayload> ASSET_DATA = RawPayload.type(AssetData.CHANNEL);
 
     private SpoutCraftReduxChannels() {
     }
@@ -41,5 +45,7 @@ public final class SpoutCraftReduxChannels {
         }
         PayloadTypeRegistry.serverboundPlay().register(SCREEN_CLOSED, RawPayload.codec(SCREEN_CLOSED, Limits.MAX_SERVERBOUND_BYTES));
         PayloadTypeRegistry.serverboundPlay().register(CONTROL_EVENT, RawPayload.codec(CONTROL_EVENT, Limits.MAX_SERVERBOUND_BYTES));
+        PayloadTypeRegistry.serverboundPlay().register(ASSET_REQUEST, RawPayload.codec(ASSET_REQUEST, Limits.MAX_SERVERBOUND_BYTES));
+        PayloadTypeRegistry.clientboundPlay().register(ASSET_DATA, RawPayload.codec(ASSET_DATA, Limits.MAX_CLIENTBOUND_BYTES));
     }
 }
