@@ -70,6 +70,11 @@ public class TextField extends Widget {
     }
 
     @Override
+    public boolean wantsTextInput() {
+        return true;
+    }
+
+    @Override
     public void render(GuiGraphicsExtractor graphics, Font font, int mouseX, int mouseY, float partialTick) {
         if (!this.visible) {
             return;

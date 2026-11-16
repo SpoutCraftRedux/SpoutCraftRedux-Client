@@ -93,6 +93,11 @@ public abstract class Widget {
         return false;
     }
 
+    /** Whether this widget needs typed characters while focused. */
+    public boolean wantsTextInput() {
+        return false;
+    }
+
     public void setFocused(boolean focused) {
         this.focused = focused;
     }

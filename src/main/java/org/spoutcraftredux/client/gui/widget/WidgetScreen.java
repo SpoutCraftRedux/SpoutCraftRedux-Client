@@ -96,6 +96,14 @@ public abstract class WidgetScreen extends Screen {
         if (widget != null) {
             widget.setFocused(true);
         }
+        // Typed characters only arrive while text input is switched on
+        this.minecraft.onTextInputFocusChange(this, widget != null && widget.wantsTextInput());
+    }
+
+    @Override
+    public void removed() {
+        this.minecraft.onTextInputFocusChange(this, false);
+        super.removed();
     }
 
     @Override

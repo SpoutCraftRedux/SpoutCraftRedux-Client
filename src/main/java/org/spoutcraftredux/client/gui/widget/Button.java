@@ -1,5 +1,6 @@
 package org.spoutcraftredux.client.gui.widget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -79,7 +80,7 @@ public class Button extends Widget {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleClick) {
-        if (this.visible && this.enabled && button == 0 && this.contains(mouseX, mouseY)) {
+        if (this.visible && this.enabled && button == InputConstants.MOUSE_BUTTON_LEFT && this.contains(mouseX, mouseY)) {
             WidgetStyle.playClick();
             this.onClick.run();
             return true;

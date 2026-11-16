@@ -1,5 +1,6 @@
 package org.spoutcraftredux.client.gui.widget;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -104,7 +105,7 @@ public class ListView extends Scrollable {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button, boolean doubleClick) {
-        if (!this.visible || button != 0 || !this.inViewport(mouseX, mouseY)) {
+        if (!this.visible || button != InputConstants.MOUSE_BUTTON_LEFT || !this.inViewport(mouseX, mouseY)) {
             return false;
         }
         double localY = mouseY - this.y + this.scrollY;
