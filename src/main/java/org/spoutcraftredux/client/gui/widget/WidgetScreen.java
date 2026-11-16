@@ -39,6 +39,26 @@ public abstract class WidgetScreen extends Screen {
         return widget;
     }
 
+    /** Swaps a widget for another in the same drawing position. */
+    protected void replaceWidget(Widget old, Widget replacement) {
+        int index = this.widgets.indexOf(old);
+        if (index < 0) {
+            this.widgets.add(replacement);
+        } else {
+            this.widgets.set(index, replacement);
+        }
+        if (this.focused == old) {
+            this.focus(null);
+        }
+    }
+
+    protected void removeWidget(Widget widget) {
+        this.widgets.remove(widget);
+        if (this.focused == widget) {
+            this.focus(null);
+        }
+    }
+
     @Override
     protected void init() {
         if (this.widgets.isEmpty()) {

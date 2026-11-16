@@ -14,6 +14,7 @@ import org.spoutcraftredux.client.controls.BindingSettings;
 import org.spoutcraftredux.client.controls.ServerKeyBindings;
 import org.spoutcraftredux.client.controls.Shortcuts;
 import org.spoutcraftredux.client.gui.dev.DevCommands;
+import org.spoutcraftredux.client.gui.server.ServerGui;
 import org.spoutcraftredux.client.network.NotificationHandler;
 import org.spoutcraftredux.client.network.RawPayload;
 import org.spoutcraftredux.client.network.SpoutCraftReduxChannels;
@@ -22,12 +23,16 @@ import org.spoutcraftredux.protocol.ProtocolException;
 import org.spoutcraftredux.protocol.SpoutCraftReduxProtocol;
 import org.spoutcraftredux.protocol.message.Hello;
 import org.spoutcraftredux.protocol.message.HelloAck;
+import org.spoutcraftredux.protocol.message.ScreenClose;
+import org.spoutcraftredux.protocol.message.ScreenOpen;
+import org.spoutcraftredux.protocol.message.WidgetRemove;
+import org.spoutcraftredux.protocol.message.WidgetUpdate;
 import org.slf4j.Logger;
 
 public final class SpoutCraftReduxClient implements ClientModInitializer {
     private static final Logger LOGGER = LogUtils.getLogger();
     /** Features this build implements; grows as phases land. */
-    private static final Set<String> CLIENT_CAPABILITIES = Set.of(Capabilities.NOTIFICATION, Capabilities.KEYBIND);
+    private static final Set<String> CLIENT_CAPABILITIES = Set.of(Capabilities.NOTIFICATION, Capabilities.KEYBIND, Capabilities.UI, Capabilities.HUD);
 
     @Override
     public void onInitializeClient() {
@@ -70,6 +75,12 @@ public final class SpoutCraftReduxClient implements ClientModInitializer {
         });
         ClientTickEvents.END_CLIENT_TICK.register(ServerKeyBindings::tick);
 
+        ServerGui.register();
+        receive(SpoutCraftReduxChannels.SCREEN_OPEN, (minecraft, data) -> ServerGui.open(minecraft, ScreenOpen.decode(data)));
+        receive(SpoutCraftReduxChannels.SCREEN_CLOSE, (minecraft, data) -> ServerGui.close(ScreenClose.decode(data)));
+        receive(SpoutCraftReduxChannels.WIDGET_UPDATE, (minecraft, data) -> ServerGui.update(WidgetUpdate.decode(data)));
+        receive(SpoutCraftReduxChannels.WIDGET_REMOVE, (minecraft, data) -> ServerGui.remove(WidgetRemove.decode(data)));
+
         ClientPlayNetworking.registerGlobalReceiver(SpoutCraftReduxChannels.NOTIFICATION,
             (payload, context) -> NotificationHandler.handle(context.client(), payload.data()));
 
@@ -78,6 +89,19 @@ public final class SpoutCraftReduxClient implements ClientModInitializer {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             SpoutCraftReduxSession.end();
             ServerKeyBindings.clear();
+            ServerGui.clear();
+        });
+    }
+
+    /** Registers a play-phase receiver that drops malformed messages instead of disconnecting. */
+    private static void receive(net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type<RawPayload> type,
+                                java.util.function.BiConsumer<net.minecraft.client.Minecraft, byte[]> handler) {
+        ClientPlayNetworking.registerGlobalReceiver(type, (payload, context) -> {
+            try {
+                handler.accept(context.client(), payload.data());
+            } catch (ProtocolException e) {
+                LOGGER.warn("Ignoring malformed {}: {}", type.id(), e.getMessage());
+            }
         });
     }
 
