@@ -7,9 +7,12 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
+import org.spoutcraftredux.client.network.NotificationHandler;
 import org.spoutcraftredux.client.network.RawPayload;
 import org.spoutcraftredux.client.network.SpoutCraftReduxChannels;
+import org.spoutcraftredux.protocol.Capabilities;
 import org.spoutcraftredux.protocol.ProtocolException;
 import org.spoutcraftredux.protocol.SpoutCraftReduxProtocol;
 import org.spoutcraftredux.protocol.message.Hello;
@@ -19,7 +22,7 @@ import org.slf4j.Logger;
 public final class SpoutCraftReduxClient implements ClientModInitializer {
     private static final Logger LOGGER = LogUtils.getLogger();
     /** Features this build implements; grows as phases land. */
-    private static final Set<String> CLIENT_CAPABILITIES = Set.of();
+    private static final Set<String> CLIENT_CAPABILITIES = Set.of(Capabilities.NOTIFICATION);
 
     @Override
     public void onInitializeClient() {
@@ -47,6 +50,9 @@ public final class SpoutCraftReduxClient implements ClientModInitializer {
             context.responseSender().sendPacket(new RawPayload(SpoutCraftReduxChannels.HELLO_ACK, ack.encode()));
             LOGGER.info("Connected to a SpoutCraft Redux server (protocol {}, capabilities {})", version.getAsInt(), hello.capabilities());
         });
+
+        ClientPlayNetworking.registerGlobalReceiver(SpoutCraftReduxChannels.NOTIFICATION,
+            (payload, context) -> NotificationHandler.handle(context.client(), payload.data()));
 
         ClientConfigurationConnectionEvents.INIT.register((handler, client) -> SpoutCraftReduxSession.end());
         ClientConfigurationConnectionEvents.DISCONNECT.register((handler, client) -> SpoutCraftReduxSession.end());
