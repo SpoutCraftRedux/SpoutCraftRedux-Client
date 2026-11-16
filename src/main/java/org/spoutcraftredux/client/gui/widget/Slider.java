@@ -113,6 +113,6 @@ public class Slider extends Widget {
 
     @Override
     public @Nullable CursorType getCursor(double mouseX, double mouseY) {
-        return this.dragging ? CursorTypes.POINTING_HAND : this.clickCursor(mouseX, mouseY);
+        return this.dragging ? CursorTypes.RESIZE_EW : this.clickCursor(mouseX, mouseY);
     }
 }
