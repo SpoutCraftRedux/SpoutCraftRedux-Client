@@ -3,6 +3,7 @@ package org.spoutcraftredux.client.gui.controls;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
 import net.minecraft.network.chat.Component;
 import org.spoutcraftredux.client.controls.KeyCombo;
 
@@ -26,6 +27,18 @@ public final class VanillaBindingItem extends ControlsItem {
     }
 
     @Override
+    protected Component describeKey() {
+        Options options = Minecraft.getInstance().options;
+        boolean needsModifier = this.mapping.getCategory() == KeyMapping.Category.DEBUG
+            && this.mapping != options.keyDebugModifier && this.mapping != options.keyDebugOverlay;
+        if (needsModifier && !this.mapping.isUnbound() && !options.keyDebugModifier.isUnbound()) {
+            // F3 combinations: shown as the debug modifier plus this key, like F3+L
+            return Component.empty().append(options.keyDebugModifier.getTranslatedKeyMessage()).append("+").append(super.describeKey());
+        }
+        return super.describeKey();
+    }
+
+    @Override
     public void setKey(KeyCombo key) {
         this.mapping.setKey(key.key());
         Minecraft.getInstance().options.save();
@@ -34,14 +47,18 @@ public final class VanillaBindingItem extends ControlsItem {
 
     @Override
     public boolean conflicts(ControlsItem other) {
-        // Debug bindings only fire with F3 held and spectator ones only in spectator mode, so neither clashes with the rest
+        // Minecraft overlaps some F3 combinations on purpose, and spectator bindings only work in spectator mode
+        if (this.mapping.getCategory() == KeyMapping.Category.DEBUG
+            || other instanceof VanillaBindingItem vanilla && vanilla.mapping.getCategory() == KeyMapping.Category.DEBUG) {
+            return false;
+        }
         KeyMapping.Category otherContext = other instanceof VanillaBindingItem vanilla ? context(vanilla.mapping) : null;
         return context(this.mapping) == otherContext && super.conflicts(other);
     }
 
     private static KeyMapping.Category context(KeyMapping mapping) {
         KeyMapping.Category category = mapping.getCategory();
-        return category == KeyMapping.Category.DEBUG || category == KeyMapping.Category.SPECTATOR ? category : null;
+        return category == KeyMapping.Category.SPECTATOR ? category : null;
     }
 
     @Override

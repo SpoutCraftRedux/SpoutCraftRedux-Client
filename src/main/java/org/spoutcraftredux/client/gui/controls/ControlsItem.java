@@ -49,8 +49,13 @@ public abstract class ControlsItem implements ListView.Item {
         return 11;
     }
 
+    /** How the key is written in the list. */
+    protected Component describeKey() {
+        return this.getKey().describe();
+    }
+
     protected Component keyText() {
-        return this.screen.isEditing(this) ? Component.literal("> <") : this.getKey().describe();
+        return this.screen.isEditing(this) ? Component.literal("> <") : this.describeKey();
     }
 
     @Override
