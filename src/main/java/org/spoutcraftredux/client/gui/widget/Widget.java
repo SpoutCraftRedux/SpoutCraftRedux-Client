@@ -100,6 +100,10 @@ public abstract class Widget {
         return false;
     }
 
+    public boolean isFocused() {
+        return this.focused;
+    }
+
     public void setFocused(boolean focused) {
         this.focused = focused;
     }

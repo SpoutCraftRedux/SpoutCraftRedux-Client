@@ -100,6 +100,58 @@ public final class ServerWidgets {
         return parsed == null ? ItemStack.EMPTY : BuiltInRegistries.ITEM.getOptional(parsed).map(ItemStack::new).orElse(ItemStack.EMPTY);
     }
 
+    /**
+     * Updates an existing widget in place, so a slider being dragged or a field being typed in isn't interrupted.
+     *
+     * @return false if the widget is of another type and has to be rebuilt
+     */
+    public static boolean apply(Widget widget, WidgetSpec spec) {
+        boolean applied = switch (widget) {
+            case Label label when spec.type().equals(WidgetTypes.LABEL) -> {
+                label.setText(text(spec.string("text", ""))).setColor(spec.integer("color", 0xFFFFFFFF))
+                    .setShadow(spec.bool("shadow", true)).setWrap(spec.bool("wrap", false))
+                    .setAlign(align(spec.integer("align", Anchors.ALIGN_LEFT)));
+                yield true;
+            }
+            case Button button when spec.type().equals(WidgetTypes.BUTTON) -> {
+                button.setText(text(spec.string("text", ""))).setAlign(align(spec.integer("align", Anchors.ALIGN_CENTER)));
+                yield true;
+            }
+            case CheckBox box when spec.type().equals(WidgetTypes.CHECKBOX) -> {
+                box.setText(text(spec.string("text", ""))).setChecked(spec.bool("checked", false));
+                yield true;
+            }
+            case TextField field when spec.type().equals(WidgetTypes.TEXT_FIELD) -> {
+                field.setMaxLength(Math.max(1, spec.integer("max_length", 256))).setPlaceholder(text(spec.string("placeholder", "")));
+                if (!field.isFocused()) {
+                    field.setText(spec.string("text", ""));
+                }
+                yield true;
+            }
+            case Slider slider when spec.type().equals(WidgetTypes.SLIDER) -> {
+                slider.setText(text(spec.string("text", "")));
+                if (!slider.isDragging()) {
+                    slider.setPosition(spec.number("position", 0.0F));
+                }
+                yield true;
+            }
+            case Gradient gradient when spec.type().equals(WidgetTypes.GRADIENT) -> {
+                gradient.setColors(spec.integer("top", 0xFF000000), spec.integer("bottom", spec.integer("top", 0xFF000000)));
+                yield true;
+            }
+            case ItemWidget item when spec.type().equals(WidgetTypes.ITEM) -> {
+                item.setStack(item(spec.string("item", "")));
+                yield true;
+            }
+            default -> false;
+        };
+        if (applied) {
+            widget.setVisible(spec.visible()).setEnabled(spec.enabled());
+            widget.setTooltip(spec.tooltipJson().isEmpty() ? null : text(spec.tooltipJson()));
+        }
+        return applied;
+    }
+
     /** Positions a widget for the given screen size, measuring from its anchor point. */
     public static void place(Widget widget, WidgetSpec spec, int screenWidth, int screenHeight) {
         int x;

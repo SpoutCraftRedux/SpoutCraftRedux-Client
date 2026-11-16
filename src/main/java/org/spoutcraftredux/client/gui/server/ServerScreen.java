@@ -35,8 +35,15 @@ public class ServerScreen extends WidgetScreen {
 
     /** Adds or replaces a widget, keeping its drawing position when replaced. */
     public void put(WidgetSpec spec) {
-        Widget widget = ServerWidgets.create(spec, this.screenId, this.events);
         Entry old = this.entries.get(spec.id());
+        if (old != null && ServerWidgets.apply(old.widget(), spec)) {
+            this.entries.put(spec.id(), new Entry(spec, old.widget()));
+            if (this.width > 0) {
+                ServerWidgets.place(old.widget(), spec, this.width, this.height);
+            }
+            return;
+        }
+        Widget widget = ServerWidgets.create(spec, this.screenId, this.events);
         if (widget == null) {
             return;
         }

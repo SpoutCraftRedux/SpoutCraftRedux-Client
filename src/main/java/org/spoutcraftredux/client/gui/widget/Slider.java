@@ -38,6 +38,10 @@ public class Slider extends Widget {
         return this;
     }
 
+    public boolean isDragging() {
+        return this.dragging;
+    }
+
     public float getPosition() {
         return this.position;
     }

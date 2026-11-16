@@ -59,6 +59,10 @@ public class ListView extends Scrollable {
         return this.selected >= 0 ? this.items.get(this.selected) : null;
     }
 
+    public int getSelectedIndex() {
+        return this.selected;
+    }
+
     public ListView setSelected(int index) {
         this.selected = index >= 0 && index < this.items.size() ? index : -1;
         return this;
