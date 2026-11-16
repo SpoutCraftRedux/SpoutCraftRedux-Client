@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.cursor.CursorType;
 import com.mojang.blaze3d.platform.cursor.CursorTypes;
 import org.jspecify.annotations.Nullable;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -27,6 +28,7 @@ public class TextField extends Widget {
     private Component placeholder = Component.empty();
     private int maxLength = 256;
     private int cursor;
+    private Predicate<String> filter = value -> true;
     private Consumer<String> onChange = value -> {
     };
     private Consumer<String> onSubmit = value -> {
@@ -54,6 +56,12 @@ public class TextField extends Widget {
 
     public TextField setMaxLength(int maxLength) {
         this.maxLength = maxLength;
+        return this;
+    }
+
+    /** Only lets in typed or pasted text that passes the filter, for example digits only. */
+    public TextField setFilter(Predicate<String> filter) {
+        this.filter = filter;
         return this;
     }
 
@@ -176,7 +184,7 @@ public class TextField extends Widget {
 
     private void insert(String typed) {
         int room = this.maxLength - this.text.length();
-        if (room <= 0 || typed.isEmpty()) {
+        if (room <= 0 || typed.isEmpty() || !this.filter.test(typed)) {
             return;
         }
         String piece = typed.length() > room ? typed.substring(0, room) : typed;

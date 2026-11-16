@@ -9,6 +9,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworkin
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import org.spoutcraftredux.client.controls.Shortcuts;
 import org.spoutcraftredux.client.gui.dev.DevCommands;
 import org.spoutcraftredux.client.network.NotificationHandler;
 import org.spoutcraftredux.client.network.RawPayload;
@@ -29,6 +31,8 @@ public final class SpoutCraftReduxClient implements ClientModInitializer {
     public void onInitializeClient() {
         SpoutCraftReduxChannels.register();
         DevCommands.register();
+        Shortcuts.load();
+        ClientTickEvents.END_CLIENT_TICK.register(Shortcuts::tick);
 
         ClientConfigurationNetworking.registerGlobalReceiver(SpoutCraftReduxChannels.HELLO, (payload, context) -> {
             Hello hello;
