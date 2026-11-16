@@ -40,3 +40,5 @@ The workflow uses these repository secrets:
 ## License
 
 LGPL-3.0. See [LICENSE](LICENSE) and [COPYING](COPYING).
+
+The checkbox, radio button and arrow textures in `src/main/resources/assets/spoutcraftredux/textures/gui/widget/` come from the original [Spoutcraft](https://github.com/spoutcraft/Spoutcraft) client, also LGPL-3.0. Every other texture the mod draws with comes from the player's own Minecraft install; none are shipped.
