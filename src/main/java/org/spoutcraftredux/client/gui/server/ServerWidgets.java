@@ -58,7 +58,7 @@ public final class ServerWidgets {
                 .setWrap(spec.bool("wrap", false))
                 .setAlign(align(spec.integer("align", Anchors.ALIGN_LEFT)));
             case WidgetTypes.BUTTON -> new Button(text(spec.string("text", "")))
-                .setAlign(align(spec.integer("align", Anchors.ALIGN_CENTER)))
+                .setAlign(align(spec.integer("align", Anchors.ALIGN_CENTER))).setStyle(buttonStyle(spec))
                 .onClick(() -> send.accept(ControlEvent.click(screenId, spec.id())));
             case WidgetTypes.CHECKBOX -> new CheckBox(text(spec.string("text", "")))
                 .setChecked(spec.bool("checked", false))
@@ -83,6 +83,22 @@ public final class ServerWidgets {
             widget.setTooltip(spec.tooltipJson().isEmpty() ? null : text(spec.tooltipJson()));
         }
         return widget;
+    }
+
+    private static @Nullable String optionalString(WidgetSpec spec, String key) {
+        return spec.properties().get(key) instanceof String value && !value.isEmpty() ? value : null;
+    }
+
+    private static @Nullable Integer optionalInt(WidgetSpec spec, String key) {
+        return spec.properties().get(key) instanceof Integer value ? value : null;
+    }
+
+    private static Button.Style buttonStyle(WidgetSpec spec) {
+        return new Button.Style(optionalString(spec, "texture"), optionalString(spec, "hover_texture"),
+            optionalString(spec, "disabled_texture"), spec.integer("border", 0),
+            optionalInt(spec, "background"), optionalInt(spec, "hover_background"), optionalInt(spec, "disabled_background"),
+            optionalInt(spec, "color"), optionalInt(spec, "hover_color"), optionalInt(spec, "disabled_color"),
+            spec.bool("shadow", true));
     }
 
     private static Widget list(WidgetSpec spec, int screenId, Consumer<ControlEvent> send) {
@@ -116,7 +132,8 @@ public final class ServerWidgets {
                 yield true;
             }
             case Button button when spec.type().equals(WidgetTypes.BUTTON) -> {
-                button.setText(text(spec.string("text", ""))).setAlign(align(spec.integer("align", Anchors.ALIGN_CENTER)));
+                button.setText(text(spec.string("text", ""))).setAlign(align(spec.integer("align", Anchors.ALIGN_CENTER)))
+                    .setStyle(buttonStyle(spec));
                 yield true;
             }
             case CheckBox box when spec.type().equals(WidgetTypes.CHECKBOX) -> {
