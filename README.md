@@ -26,6 +26,17 @@ If you already cloned without it, run `git submodule update --init`.
 
 `runJoinLocal` pairs with the server's `runDevServer`. The dev client uses an offline account, so set `online-mode=false` and `white-list=false` on that server.
 
+## CI and downloads
+
+`.github/workflows/build.yml` builds every push and pull request. A push to `main` also uploads the mod jar to https://api.spoutcraftredux.org as build `<run number>` of project `spoutcraftredux-fabric`, version `26.3`. It then shows up on https://spoutcraftredux.org/downloads. The mod isn't published to Maven.
+
+The workflow uses these repository secrets:
+
+| Secret | Used for |
+|---|---|
+| `DOWNLOADS_API_TOKEN` | Upload token for api.spoutcraftredux.org |
+| `DOWNLOADS_API_TOKEN_STAGING` | Upload token for staging-api.spoutcraftredux.org (not used by CI yet) |
+
 ## License
 
 LGPL-3.0. See [LICENSE](LICENSE) and [COPYING](COPYING).
