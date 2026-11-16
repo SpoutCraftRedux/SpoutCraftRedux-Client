@@ -197,7 +197,7 @@ public class ControlsScreen extends WidgetScreen {
         InputConstants.Key key = InputConstants.getKey(event);
         if (event.isEscape()) {
             this.finishEdit(KeyCombo.UNBOUND);
-        } else if (this.editing.useModifiers() && KeyCombo.isModifierKey(key)) {
+        } else if (this.editing.waitsFor(key)) {
             // Wait: the modifier may be part of a combination, or the key itself if released alone
             return true;
         } else {
@@ -210,6 +210,7 @@ public class ControlsScreen extends WidgetScreen {
     public boolean keyReleased(KeyEvent event) {
         InputConstants.Key key = InputConstants.getKey(event);
         if (this.editing != null && this.editing.useModifiers() && KeyCombo.isModifierKey(key)) {
+            // Only Ctrl, Shift and Alt can be bound on their own here; F3 always waits for another key
             // A modifier released on its own becomes the key
             this.finishEdit(new KeyCombo(key, 0));
             return true;

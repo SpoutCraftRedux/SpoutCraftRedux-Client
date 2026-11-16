@@ -1,5 +1,6 @@
 package org.spoutcraftredux.client.gui.controls;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
@@ -30,6 +31,11 @@ public abstract class ControlsItem implements ListView.Item {
 
     /** Whether Ctrl, Shift and Alt can be part of the key. */
     public abstract boolean useModifiers();
+
+    /** Whether pressing this key during capture waits for the rest of the combination instead of finishing. */
+    public boolean waitsFor(InputConstants.Key key) {
+        return this.useModifiers() && KeyCombo.isModifierKey(key);
+    }
 
     protected abstract String letter();
 

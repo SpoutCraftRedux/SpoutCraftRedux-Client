@@ -4,6 +4,9 @@
   "compatibilityLevel": "JAVA_25",
   "client": [
     "GuiMixin",
+    "KeyboardHandlerMixin",
+    "KeyMappingMixin",
+    "MouseHandlerMixin",
     "OptionsSubScreenAccessor"
   ],
   "injectors": {
