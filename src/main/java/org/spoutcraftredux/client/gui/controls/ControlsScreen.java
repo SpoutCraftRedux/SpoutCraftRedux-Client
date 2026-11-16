@@ -12,6 +12,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 import org.spoutcraftredux.client.controls.KeyCombo;
+import org.spoutcraftredux.client.controls.ServerKeyBindings;
 import org.spoutcraftredux.client.controls.Shortcut;
 import org.spoutcraftredux.client.controls.Shortcuts;
 import org.spoutcraftredux.client.gui.widget.Button;
@@ -128,13 +129,19 @@ public class ControlsScreen extends WidgetScreen {
                 items.add(new VanillaBindingItem(this, mapping));
             }
         }
+        if (this.showCustom.isChecked()) {
+            for (ServerKeyBindings.Binding binding : ServerKeyBindings.all()) {
+                items.add(new ServerBindingItem(this, binding));
+            }
+        }
         if (this.showShortcuts.isChecked()) {
             for (Shortcut shortcut : Shortcuts.all()) {
                 items.add(new ShortcutItem(this, shortcut));
             }
         }
         for (ControlsItem item : items) {
-            item.setConflicting(items.stream().anyMatch(other -> other != item && item.conflicts(other)));
+            // Both sides must agree, so exceptions like F3 combinations hold whichever row asks
+            item.setConflicting(items.stream().anyMatch(other -> other != item && item.conflicts(other) && other.conflicts(item)));
         }
         String query = this.search.getText().toLowerCase(Locale.ROOT);
         if (!query.isEmpty()) {

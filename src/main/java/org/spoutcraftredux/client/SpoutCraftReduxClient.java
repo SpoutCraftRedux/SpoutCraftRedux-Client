@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import org.spoutcraftredux.client.controls.BindingSettings;
+import org.spoutcraftredux.client.controls.ServerKeyBindings;
 import org.spoutcraftredux.client.controls.Shortcuts;
 import org.spoutcraftredux.client.gui.dev.DevCommands;
 import org.spoutcraftredux.client.network.NotificationHandler;
@@ -26,7 +27,7 @@ import org.slf4j.Logger;
 public final class SpoutCraftReduxClient implements ClientModInitializer {
     private static final Logger LOGGER = LogUtils.getLogger();
     /** Features this build implements; grows as phases land. */
-    private static final Set<String> CLIENT_CAPABILITIES = Set.of(Capabilities.NOTIFICATION);
+    private static final Set<String> CLIENT_CAPABILITIES = Set.of(Capabilities.NOTIFICATION, Capabilities.KEYBIND);
 
     @Override
     public void onInitializeClient() {
@@ -59,12 +60,25 @@ public final class SpoutCraftReduxClient implements ClientModInitializer {
             LOGGER.info("Connected to a SpoutCraft Redux server (protocol {}, capabilities {})", version.getAsInt(), hello.capabilities());
         });
 
+        ClientPlayNetworking.registerGlobalReceiver(SpoutCraftReduxChannels.KEY_BINDINGS, (payload, context) -> {
+            try {
+                ServerKeyBindings.receive(org.spoutcraftredux.protocol.message.KeyBindings.decode(payload.data()),
+                    json -> NotificationHandler.parse(context.client(), json));
+            } catch (ProtocolException e) {
+                LOGGER.warn("Ignoring malformed SpoutCraft Redux key bindings: {}", e.getMessage());
+            }
+        });
+        ClientTickEvents.END_CLIENT_TICK.register(ServerKeyBindings::tick);
+
         ClientPlayNetworking.registerGlobalReceiver(SpoutCraftReduxChannels.NOTIFICATION,
             (payload, context) -> NotificationHandler.handle(context.client(), payload.data()));
 
         ClientConfigurationConnectionEvents.INIT.register((handler, client) -> SpoutCraftReduxSession.end());
         ClientConfigurationConnectionEvents.DISCONNECT.register((handler, client) -> SpoutCraftReduxSession.end());
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> SpoutCraftReduxSession.end());
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            SpoutCraftReduxSession.end();
+            ServerKeyBindings.clear();
+        });
     }
 
     private static String modVersion() {

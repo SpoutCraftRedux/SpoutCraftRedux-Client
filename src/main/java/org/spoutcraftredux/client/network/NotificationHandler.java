@@ -37,7 +37,7 @@ public final class NotificationHandler {
         );
     }
 
-    private static Component parse(Minecraft minecraft, String json) {
+    public static Component parse(Minecraft minecraft, String json) {
         try {
             var ops = minecraft.getConnection() != null
                 ? minecraft.getConnection().registryAccess().createSerializationContext(JsonOps.INSTANCE)
